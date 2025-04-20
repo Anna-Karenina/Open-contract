@@ -1,0 +1,29 @@
+{% extends "layouts/base.html" %}
+
+{% block title %}Project{% endblock %}
+
+{% block drawer %}
+<div 
+    hx-get="project/components/drawer"
+    hx-trigger="load, project-created from:document"  
+    hx-swap="innerHTML"
+    hx-target="this"
+  >
+  <div class="htmx-indicator loading">Loading drawer...</div>
+</div>
+{% endblock %}
+
+{% block content %}
+  {% include "pages/project/components/content.html" %}
+{% endblock %}
+
+{% block aside %}
+<div 
+    hx-get="project/components/aside"
+    hx-trigger="load delay:1s"  
+    hx-swap="innerHTML"
+    hx-target="this"
+  >
+  <div class="htmx-indicator loading">Loading drawer...</div>
+</div>
+{% endblock %}

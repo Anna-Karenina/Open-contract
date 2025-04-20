@@ -1,0 +1,258 @@
+<script src="https://cdn.jsdelivr.net/npm/protobufjs@6.11.2/dist/protobuf.min.js"></script>
+
+<div class="flex justify-between items-end mb-1">
+  <div id="status" class="badge badge-sm w-16 mr-2">clear</div>
+  <button class="btn btn-sm btn-primary" id="save-content">Save Version</button>
+</div>
+
+<div id="editor-container" class="w-full h-150"></div>
+
+<script type="module">
+  import * as monaco from "https://cdn.jsdelivr.net/npm/monaco-editor@0.47.0/+esm";
+
+  monaco.languages.register({ id: "proto" });
+  monaco.languages.setMonarchTokensProvider("proto", {
+    defaultToken: "",
+    tokenPostfix: ".proto",
+
+    keywords: [
+      "syntax",
+      "import",
+      "package",
+      "option",
+      "message",
+      "enum",
+      "service",
+      "rpc",
+      "returns",
+      "required",
+      "optional",
+      "repeated",
+      "oneof",
+      "map",
+      "reserved",
+      "to",
+      "true",
+      "false",
+    ],
+
+    typeKeywords: [
+      "double",
+      "float",
+      "int32",
+      "int64",
+      "uint32",
+      "uint64",
+      "sint32",
+      "sint64",
+      "fixed32",
+      "fixed64",
+      "sfixed32",
+      "sfixed64",
+      "bool",
+      "string",
+      "bytes",
+    ],
+
+    operators: ["=", ";", "{", "}", "[", "]", "(", ")", "<", ">"],
+
+    tokenizer: {
+      root: [
+        [
+          /[a-z_$][\w$]*/,
+          {
+            cases: {
+              "@keywords": "keyword",
+              "@typeKeywords": "type",
+              "@default": "identifier",
+            },
+          },
+        ],
+        { include: "@whitespace" },
+        [/[{}()\[\]<>]/, "@brackets"],
+        [/[=;,]/, "delimiter"],
+        [/\/\/.*$/, "comment"],
+        [/\/\*/, "comment", "@comment"],
+        [/"([^"\\]|\\.)*$/, "string.invalid"],
+        [/'([^'\\]|\\.)*$/, "string.invalid"],
+        [/"/, "string", "@string_double"],
+        [/'/, "string", "@string_single"],
+        [/\d+\.\d+/, "number.float"],
+        [/\d+/, "number"],
+      ],
+
+      comment: [
+        [/[^\/*]+/, "comment"],
+        [/\*\//, "comment", "@pop"],
+        [/[\/*]/, "comment"],
+      ],
+
+      string_double: [
+        [/[^\\"]+/, "string"],
+        [/\\./, "string.escape"],
+        [/"/, "string", "@pop"],
+      ],
+
+      string_single: [
+        [/[^\\']+/, "string"],
+        [/\\./, "string.escape"],
+        [/'/, "string", "@pop"],
+      ],
+
+      whitespace: [
+        [/[ \t\r\n]+/, "white"],
+        [/\/\*/, "comment", "@comment"],
+        [/\/\/.*$/, "comment"],
+      ],
+    },
+  });
+
+  let editor = monaco.editor.create(
+    document.getElementById("editor-container"),
+    {
+      value: `{{proto_content}}`,
+      language: "proto",
+      theme: "vs-dark",
+      automaticLayout: true,
+      minimap: { enabled: false },
+    }
+  );
+
+  // Store the current model markers
+  let currentMarkers = [];
+  async function validateProtoContent(content) {
+    // Clear previous markers
+    currentMarkers = monaco.editor.setModelMarkers(
+      editor.getModel(),
+      "owner",
+      []
+    );
+
+    try {
+      // Try to parse the proto file
+      await protobuf.parse(content, { keepCase: true });
+
+      // If successful, return no errors
+      return [];
+    } catch (error) {
+      // Extract line and column from error message
+      const lineMatch = error.message.match(/line (\d+)/i);
+      const columnMatch = error.message.match(/column (\d+)/i);
+
+      const lineNumber = lineMatch ? parseInt(lineMatch[1]) : 1;
+      const column = columnMatch ? parseInt(columnMatch[1]) : 1;
+
+      // Return error information
+      return [
+        {
+          severity: monaco.MarkerSeverity.Error,
+          message: error.message.split("\n")[0], // Take first line of error
+          startLineNumber: lineNumber,
+          startColumn: column,
+          endLineNumber: lineNumber,
+          endColumn: column + 10, // Arbitrary end column
+        },
+      ];
+    }
+  }
+
+  // Debounce function to prevent too frequent validation
+  function debounce(func, wait) {
+    let timeout;
+    return function (...args) {
+      clearTimeout(timeout);
+      timeout = setTimeout(() => func.apply(this, args), wait);
+    };
+  }
+
+  editor.addAction({
+    id: "export",
+    label: "Export",
+    contextMenuGroupId: "navigation", // Группа (например, "navigation", "cutcopypaste")
+    contextMenuOrder: 1, // Позиция в меню
+    run: function (editor) {
+      const selection = editor.getSelection();
+      if (selection.isEmpty()) {
+        showToast("Text for export should be selected", { type: "error" });
+      } else {
+        const text = editor.getModel().getValueInRange(selection);
+        showToast(`${text}`, { type: "info" });
+        showToast(`not implimented`, { type: "error" });
+      }
+    },
+  });
+  // Validate when content changes
+  editor.getModel().onDidChangeContent(
+    debounce(async () => {
+      const errors = await validateProtoContent(editor.getValue());
+      currentMarkers = monaco.editor.setModelMarkers(
+        editor.getModel(),
+        "owner",
+        errors
+      );
+
+      // Update status
+      const status = document.getElementById("status");
+      status.classList.remove("badge-error");
+      status.classList.remove("badge-info");
+
+      if (errors.length) {
+        status.textContent = "error";
+        status.classList.add("badge-error");
+      } else {
+        status.classList.add("badge-info");
+        status.textContent = "ok";
+      }
+    }, 500)
+  );
+
+  // Register hover provider to show error details
+  monaco.languages.registerHoverProvider("proto", {
+    provideHover: function (model, position) {
+      const markers = monaco.editor.getModelMarkers({ resource: model.uri });
+      const marker = markers.find(
+        (m) =>
+          position.lineNumber >= m.startLineNumber &&
+          position.lineNumber <= m.endLineNumber &&
+          position.column >= m.startColumn &&
+          position.column <= m.endColumn
+      );
+
+      if (marker) {
+        return {
+          contents: [{ value: "**Error**" }, { value: marker.message }],
+        };
+      }
+      return null;
+    },
+  });
+
+  document.getElementById("save-content").addEventListener("click", () => {
+    const content = editor.getValue();
+    const status = document.getElementById("status");
+    status.classList.remove("badge-error");
+    status.classList.remove("badge-info");
+    status.classList.remove("badge-success");
+    status.classList.add("badge-info");
+    status.textContent = "loading";
+
+    fetch(`http://localhost:6969/api/files/{{filename}}/save`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ content }), // Явное преобразование в JSON
+    })
+      .then(() => {
+        status.classList.add("badge-success");
+        status.textContent = "saved";
+      })
+      .catch((err) => {
+        status.classList.add("badge-error");
+        status.textContent = "error";
+      })
+      .finally(() => status.classList.remove("badge-info"));
+  });
+
+  validateProtoContent(editor.getValue());
+</script>

@@ -1,0 +1,41 @@
+.animate-fade-in {
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+.animate-fade-out {
+  animation: fadeOut 0.3s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeOut {
+  from {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+}
+
+.textarea.custom-textarea {
+  border-color: var(--color-base-200);
+  &:has(> textarea[disabled]),
+  &:is(:disabled, [disabled]) {
+    cursor: not-allowed;
+    border-color: transparent;
+    background-color: transparent;
+    color: color-mix(in oklab, var(--color-base-content) 40%, transparent);
+    box-shadow: none;
+  }
+}

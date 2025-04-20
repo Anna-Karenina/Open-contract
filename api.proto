@@ -1,0 +1,187 @@
+/*
+ * That schema was generated automatically by the Anna Karenina swagger-to-proto generator.
+ * Please check everything twice before using that or parsing it somehow.
+*/ 
+
+syntax = "proto3";
+
+import "google/protobuf/empty.proto";
+import "google/protobuf/struct.proto";
+
+/*
+ * Title: Swagger Petstore
+ * This is a sample server Petstore server.  You can find out more about Swagger at [http://swagger.io](http://swagger.io) or on [irc.freenode.net, #swagger](http://swagger.io/irc/).  For this sample, you can use the api key `special-key` to test the authorization filters.
+ * Version: 1.0.7
+ */
+
+message Pet {
+  /* pet status in the store */
+  string status = 1;
+  repeated Tag tags = 2;
+  int64 id = 3;
+  Category category = 4;
+  repeated string photoUrls = 5;
+  string name = 6;
+}
+
+message ApiResponse {
+  string message = 1;
+  int32 code = 2;
+  string type = 3;
+}
+
+message User {
+  string firstName = 1;
+  string username = 2;
+  int64 id = 3;
+  string lastName = 4;
+  /* User Status */
+  int32 userStatus = 5;
+  string password = 6;
+  string email = 7;
+  string phone = 8;
+}
+
+message Order {
+  bool complete = 1;
+  int32 quantity = 2;
+  int64 id = 3;
+  string shipDate = 4;
+  int64 petId = 5;
+  /* Order Status */
+  string status = 6;
+}
+
+message Tag {
+  string name = 1;
+  int64 id = 2;
+}
+
+message Category {
+  string name = 1;
+  int64 id = 2;
+}
+
+message request_query_params_Pet_GetPetFindByStatus {
+  /* Status values that need to be considered for filter */
+  string status = 1;
+}
+
+message request_query_params_Pet_GetPetFindByTags {
+  /* Tags to filter by */
+  string tags = 1;
+}
+
+message request_query_params_Pet_PostPetPetIdUploadImage {
+  /* ID of pet to update */
+  string petId = 1;
+}
+
+message request_query_params_Pet_GetPetPetId {
+  /* ID of pet to return */
+  string petId = 1;
+}
+
+message request_query_params_Pet_PostPetPetId {
+  /* ID of pet that needs to be updated */
+  string petId = 1;
+}
+
+message request_query_params_Pet_DeletePetPetId {
+  /* Pet id to delete */
+  string petId = 1;
+}
+
+service PetService {
+  /* Finds Pets by status */
+  rpc GetPetFindByStatus(request_query_params_Pet_GetPetFindByStatus) returns (repeated Pet);
+  /* Finds Pets by tags */
+  rpc GetPetFindByTags(request_query_params_Pet_GetPetFindByTags) returns (repeated Pet);
+  /* uploads an image */
+  rpc PostPetPetIdUploadImage(request_query_params_Pet_PostPetPetIdUploadImage) returns (ApiResponse);
+  /* Add a new pet to the store */
+  rpc PostPet(request_body_Pet_PostPet) returns (google.protobuf.Empty);
+  /* Update an existing pet */
+  rpc PutPet(request_body_Pet_PutPet) returns (google.protobuf.Empty);
+  /* Find pet by ID */
+  rpc GetPetPetId(request_query_params_Pet_GetPetPetId) returns (Pet);
+  /* Updates a pet in the store with form data */
+  rpc PostPetPetId(request_query_params_Pet_PostPetPetId) returns (google.protobuf.Empty);
+  /* Deletes a pet */
+  rpc DeletePetPetId(request_query_params_Pet_DeletePetPetId) returns (google.protobuf.Empty);
+}
+
+message request_query_params_Store_GetStoreOrderOrderId {
+  /* ID of pet that needs to be fetched */
+  string orderId = 1;
+}
+
+message request_query_params_Store_DeleteStoreOrderOrderId {
+  /* ID of the order that needs to be deleted */
+  string orderId = 1;
+}
+
+service StoreService {
+  /* Place an order for a pet */
+  rpc PostStoreOrder(request_body_Store_PostStoreOrder) returns (Order);
+  /* Find purchase order by ID */
+  rpc GetStoreOrderOrderId(request_query_params_Store_GetStoreOrderOrderId) returns (Order);
+  /* Delete purchase order by ID */
+  rpc DeleteStoreOrderOrderId(request_query_params_Store_DeleteStoreOrderOrderId) returns (google.protobuf.Empty);
+  /* Returns pet inventories by status */
+  rpc GetStoreInventory(google.protobuf.Empty) returns (google.protobuf.Struct);
+}
+
+message request_query_params_User_GetUserUsername {
+  /* The name that needs to be fetched. Use user1 for testing.  */
+  string username = 1;
+}
+
+message request_query_params_User_PutUserUsername {
+  /* name that need to be updated */
+  string username = 1;
+}
+
+message request_query_params_User_DeleteUserUsername {
+  /* The name that needs to be deleted */
+  string username = 1;
+}
+
+message request_query_params_User_GetUserLogin {
+  /* The user name for login */
+  string username = 1;
+  /* The password for login in clear text */
+  string password = 2;
+}
+
+service UserService {
+  /* Creates list of users with given input array */
+  rpc PostUserCreateWithArray(request_body_User_PostUserCreateWithArray) returns (google.protobuf.Empty);
+  /* Logs out current logged in user session */
+  rpc GetUserLogout(google.protobuf.Empty) returns (google.protobuf.Empty);
+  /* Creates list of users with given input array */
+  rpc PostUserCreateWithList(request_body_User_PostUserCreateWithList) returns (google.protobuf.Empty);
+  /* Create user */
+  rpc PostUser(request_body_User_PostUser) returns (google.protobuf.Empty);
+  /* Get user by user name */
+  rpc GetUserUsername(request_query_params_User_GetUserUsername) returns (User);
+  /* Updated user */
+  rpc PutUserUsername(request_query_params_User_PutUserUsernameAndBody) returns (google.protobuf.Empty);
+  /* Delete user */
+  rpc DeleteUserUsername(request_query_params_User_DeleteUserUsername) returns (google.protobuf.Empty);
+  /* Logs user into the system */
+  rpc GetUserLogin(request_query_params_User_GetUserLogin) returns (string);
+}
+
+message GetRequest {
+  google.protobuf.Struct order = 1;
+}
+
+message GetResponse {
+  google.protobuf.Struct order = 1;
+}
+
+service New tagService {
+  rpc Get(GetRequest) returns (GetResponse);
+}
+

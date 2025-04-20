@@ -1,0 +1,6 @@
+-- Your SQL goes here
+ALTER TABLE projects
+ADD COLUMN project_link VARCHAR(255) DEFAULT '',
+ADD COLUMN description VARCHAR(500),
+ADD COLUMN creator_id INTEGER,
+ADD COLUMN updated_at TIMESTAMP NOT NULL DEFAULT NOW();

@@ -1,0 +1,159 @@
+<li x-data="scedit">
+<div class="card card-border border-base-100 bg-base-100 card-sm">
+    <div class="card-body gap-4">
+      <h2 class="flex items-center justify-between">
+        <span class="flex items-center gap-2 font-semibold">
+          <svg
+            width="15"
+            height="14"
+            viewBox="0 0 15 14"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              d="M12.911 1.00013V0.99925L14.1553 3.15525C14.2605 3.33776 14.327 3.54003 14.3504 3.74939C14.3739 3.95876 14.354 4.17072 14.2918 4.37202C14.2296 4.57332 14.1266 4.75962 13.9891 4.91928C13.8517 5.07893 13.6827 5.2085 13.4929 5.29988L3.21602 10.2489C2.86793 10.4165 2.46933 10.4464 2.10015 10.3324C1.73098 10.2185 1.41851 9.96926 1.2254 9.63462L0.834271 8.9565C0.641379 8.622 0.581983 8.22697 0.667978 7.85054C0.753974 7.47411 0.979012 7.14406 1.29802 6.9265L10.7218 0.501375C10.8958 0.382282 11.0925 0.300451 11.2996 0.261021C11.5068 0.221591 11.7198 0.225414 11.9254 0.272249C12.131 0.319085 12.3247 0.407922 12.4943 0.533181C12.6639 0.65844 12.8058 0.817416 12.911 1.00013ZM8.79065 9.15513H8.78977L11.1033 12.5353C11.2017 12.6789 11.239 12.8558 11.207 13.0269C11.175 13.1981 11.0763 13.3495 10.9326 13.4479C10.789 13.5463 10.6121 13.5836 10.441 13.5516C10.2698 13.5196 10.1184 13.4209 10.02 13.2773L8.37415 10.871V13.3438C8.37415 13.5178 8.30501 13.6847 8.18193 13.8078C8.05886 13.9309 7.89194 14 7.7179 14C7.54385 14 7.37693 13.9309 7.25386 13.8078C7.13079 13.6847 7.06165 13.5178 7.06165 13.3438V10.871L5.41577 13.2773C5.36705 13.3484 5.3048 13.4092 5.23257 13.4563C5.16033 13.5033 5.07954 13.5357 4.9948 13.5516C4.82364 13.5836 4.64679 13.5463 4.50315 13.4479C4.3595 13.3495 4.26082 13.1981 4.22882 13.0269C4.21298 12.9422 4.21398 12.8551 4.23177 12.7708C4.24957 12.6864 4.2838 12.6064 4.33252 12.5353L6.1254 9.91725C6.18989 9.82218 6.27832 9.74582 6.38177 9.69588L7.96465 8.93463C8.10593 8.86644 8.26698 8.85119 8.41855 8.89165C8.57012 8.93211 8.70215 9.0256 8.79065 9.15513ZM8.75652 3.43L4.4069 6.39625L5.23115 7.8225L9.97365 5.53875L8.75652 3.43ZM11.4611 1.5855L9.84327 2.688L11.1601 4.96738L12.9241 4.11863C12.9512 4.10571 12.9753 4.08729 12.9949 4.06454C13.0145 4.04179 13.0292 4.01522 13.0379 3.9865C13.047 3.95774 13.05 3.92739 13.0467 3.8974C13.0434 3.86741 13.0338 3.83845 13.0186 3.81238L11.7744 1.65638C11.7592 1.63035 11.7389 1.60769 11.7147 1.58979C11.6905 1.57188 11.6629 1.55911 11.6335 1.55225C11.604 1.5458 11.5735 1.54542 11.5439 1.55113C11.5143 1.55685 11.4861 1.56854 11.4611 1.5855ZM2.03652 8.01237C1.99138 8.04352 1.95958 8.09048 1.94742 8.14396C1.93527 8.19744 1.94365 8.25353 1.9709 8.30113L2.36202 8.97925C2.38965 9.02701 2.4343 9.06257 2.48704 9.07879C2.53978 9.09502 2.5967 9.09072 2.6464 9.06675L4.04465 8.39388L3.3184 7.13737L2.03652 8.01237Z"
+              fill="#8B949E"
+            />
+          </svg>
+          <span class="opacity-50 text-sm">{{service.description.as_deref().unwrap_or("")|capitalize }}</span>
+          
+      </h2>
+  
+      <div class="flex justify-between">
+          <div class="flex items-center">
+              <span class="flex justify-center p-1 min-w-12 outline outline-1 rounded-sm outline-base-400">{{service.http_method.as_deref().unwrap_or("")}}</span>
+              <h5 class="ml-3 font-semibold text-blue-400 text-lg">{{service.path.as_deref().unwrap_or("")}}</h5>
+          </div>
+  
+      <template x-if="!edit">    
+      <button
+        @click="toggle"
+        class="btn btn-sm btn-info" >
+        <svg width="17" height="16" viewBox="0 0 17 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M11.906 1.42599C12.234 1.09827 12.6786 0.914185 13.1422 0.914185C13.6059 0.914185 14.0505 1.09827 14.3785 1.42599L15.4638 2.51131C15.7915 2.83926 15.9756 3.28391 15.9756 3.74754C15.9756 4.21116 15.7915 4.65582 15.4638 4.98377L6.85916 13.5884C6.64929 13.7983 6.38946 13.9522 6.10364 14.0331L2.85467 14.9625C2.72607 14.9993 2.58998 15.001 2.46052 14.9674C2.33106 14.9338 2.21294 14.8662 2.11842 14.7716C2.0239 14.6769 1.95641 14.5587 1.92297 14.4292C1.88954 14.2997 1.89136 14.1637 1.92825 14.0351L2.85667 10.7871C2.93762 10.5013 3.09152 10.2405 3.30139 10.0296L11.906 1.42499V1.42599ZM12.0819 6.24598L10.6438 4.80688L4.36172 11.0899C4.33168 11.12 4.30968 11.1571 4.29777 11.1979L3.74011 13.1497L5.69189 12.592C5.73267 12.5801 5.76979 12.5581 5.79983 12.528L12.0819 6.24598ZM13.3191 2.48533C13.2959 2.46206 13.2683 2.4436 13.238 2.43101C13.2076 2.41841 13.1751 2.41193 13.1422 2.41193C13.1094 2.41193 13.0768 2.41841 13.0465 2.43101C13.0161 2.4436 12.9886 2.46206 12.9653 2.48533L11.7041 3.74754L13.1422 5.18664L14.4044 3.92443C14.4277 3.90122 14.4462 3.87365 14.4588 3.8433C14.4714 3.81294 14.4778 3.7804 14.4778 3.74754C14.4778 3.71468 14.4714 3.68214 14.4588 3.65178C14.4462 3.62143 14.4277 3.59386 14.4044 3.57065L13.3191 2.48533Z" fill="#333"/>
+        </svg>          
+        Edit
+      </button>
+      </template>
+      <template x-if="edit">
+        <button 
+          @click="toggle"
+          class="btn btn-sm btn-accent">
+         <svg width="17" height="16" viewBox="0 0 17 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+           <path d="M11.906 1.42599C12.234 1.09827 12.6786 0.914185 13.1422 0.914185C13.6059 0.914185 14.0505 1.09827 14.3785 1.42599L15.4638 2.51131C15.7915 2.83926 15.9756 3.28391 15.9756 3.74754C15.9756 4.21116 15.7915 4.65582 15.4638 4.98377L6.85916 13.5884C6.64929 13.7983 6.38946 13.9522 6.10364 14.0331L2.85467 14.9625C2.72607 14.9993 2.58998 15.001 2.46052 14.9674C2.33106 14.9338 2.21294 14.8662 2.11842 14.7716C2.0239 14.6769 1.95641 14.5587 1.92297 14.4292C1.88954 14.2997 1.89136 14.1637 1.92825 14.0351L2.85667 10.7871C2.93762 10.5013 3.09152 10.2405 3.30139 10.0296L11.906 1.42499V1.42599ZM12.0819 6.24598L10.6438 4.80688L4.36172 11.0899C4.33168 11.12 4.30968 11.1571 4.29777 11.1979L3.74011 13.1497L5.69189 12.592C5.73267 12.5801 5.76979 12.5581 5.79983 12.528L12.0819 6.24598ZM13.3191 2.48533C13.2959 2.46206 13.2683 2.4436 13.238 2.43101C13.2076 2.41841 13.1751 2.41193 13.1422 2.41193C13.1094 2.41193 13.0768 2.41841 13.0465 2.43101C13.0161 2.4436 12.9886 2.46206 12.9653 2.48533L11.7041 3.74754L13.1422 5.18664L14.4044 3.92443C14.4277 3.90122 14.4462 3.87365 14.4588 3.8433C14.4714 3.81294 14.4778 3.7804 14.4778 3.74754C14.4778 3.71468 14.4714 3.68214 14.4588 3.65178C14.4462 3.62143 14.4277 3.59386 14.4044 3.57065L13.3191 2.48533Z" fill="#333"/>
+           </svg>          
+         Save
+      </button>
+      </template>
+      
+      </div>
+  
+      <div class="flex flex-col">
+        <div class="tabs tabs-lift">
+          <input type="radio" name="my_tabs_{{service.id}}" class="tab" aria-label="Query" />
+          <div class="tab-content bg-base-100 border-base-300 p-0">              
+                <textarea class="textarea custom-textarea textarea-ghost w-full resize-none"  x-bind:disabled="!edit">
+                  {{service.query.as_deref().unwrap_or("")}}
+                </textarea>
+            </div>
+        
+          <input
+            type="radio"
+            name="my_tabs_{{service.id}}"
+            class="tab"
+            aria-label="Body"
+            checked="checked"
+          />
+          <div class="tab-content bg-base-100 border-base-300 p-0">
+            <textarea class="textarea custom-textarea textarea-ghost w-full resize-none"  x-bind:disabled="!edit">
+              {{service.body.as_deref().unwrap_or("")}}
+            </textarea>
+          </div>
+  
+          <input
+            type="radio"
+            name="my_tabs_{{service.id}}"
+            class="tab"
+            aria-label="Response"
+            />
+            <div class="tab-content bg-base-100 border-base-300 p-0 p-1 h-60 overflow-y-auto">
+            <textarea class="textarea custom-textarea textarea-ghost w-full resize-none"  x-bind:disabled="!edit">
+              response
+            </textarea>
+            </div>
+
+          <input
+            type="radio"
+            name="my_tabs_{{service.id}}"
+            class="tab"
+            aria-label="Comments"
+            hx-get="contract/components/tab-services/{{service.id}}/comments"
+            hx-trigger="click delay:500ms, comment-created from:document"
+            hx-push-url="false"
+            hx-target="#comments_{{service.id}}"
+            hx-swap="innerHTML settle:100ms"
+            hx-params="none"
+            />
+            
+          <div class="tab-content bg-base-100 border-base-300">
+            <div id="comments_{{service.id}}" class="p-1 h-60 overflow-y-auto">
+              <span class="flex justify-center items-center loading loading-spinner loading-sm"></span>
+            </div>
+            <form
+              class="join w-full"
+              class="btn btn-neutral join-item"
+              hx-post="/api/comments"
+              hx-ext="json-enc"
+              hx-swap="none"
+              hx-headers='{"Content-Type": "application/json"}'
+              hx-on::after-request="handleCommentMessage(event)"
+            >
+            <label class="input join-item w-full">
+              <input
+                type="text"
+                autocomplete="off"
+                placeholder="type your message"
+                required
+                name="comment"
+              />
+            </label>
+            <input type="hidden" name="contract_id" value="{{service.id}}" />
+            <button class="btn bg-base-100 border-base-100 join-item "  type="submit">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none"
+               xmlns="http://www.w3.org/2000/svg">
+              <path d="M9.9999 16.2L9.9999 13.5L16.4999 7L7.7999 11.1L2.9999 9.3C2.3999 9.1 2.3999 8.3 2.9999 8L20.4999 2C21.0999 1.8 21.7999 2.4 21.5999 3L17.2999 21.5C17.0999 22.1 16.2999 22.2 15.9999 21.7L11.8999 15.9L9.9999 16.2Z"
+              fill="oklch(.546 .245 262.881)"/>
+            </svg>
+            </button>
+          </form>
+          </div>
+         
+
+          <input type="radio" name="my_tabs_{{service.id}}" class="tab" aria-label="History" />
+          <div class="tab-content bg-base-100 border-base-300 p-6">History</div>
+          <input type="radio" name="my_tabs_{{service.id}}" class="tab" aria-label="Export" />
+          <div class="tab-content bg-base-100 border-base-300 p-6">Export</div>
+        </div>
+      </div>
+    </div>
+  </div>  
+</li>
+
+
+<script>
+  function handleCommentMessage(event) {
+    if (event.detail.failed) {
+      showToast("Ошибка: " + event.detail.xhr.responseText);
+    } else if (event.detail.successful) {
+      document.dispatchEvent(
+        new CustomEvent("comment-created", {
+          bubbles: true,
+          cancelable: true,
+          composed: true,
+        })
+      );
+    }
+  }
+</script>
+
+

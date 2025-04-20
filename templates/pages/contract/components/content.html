@@ -1,0 +1,86 @@
+<div class="tabs mb-2" id="tabs-container">
+  {% for tab in ["services", "editor", "import"] %}
+  <div
+    onclick="handleTabClick('{{ tab }}')"
+    class="tab tab-bordered {% if active_tab.matches(tab) %}tab-active{% endif %}"
+    data-tab="{{ tab }}"
+    role="tab"
+    aria-selected="{% if active_tab.matches(tab) %}true{% else %}false{% endif %}"
+  >
+    {{ tab|capitalize }}
+  </div>
+  {% endfor %}
+</div>
+
+<div
+  id="tab-contents"
+  class="overflow-y-auto h-full px-3"
+  data-base-url="contract/components/tab-"
+  hx-trigger="trigger-content from:body"
+></div>
+
+<script>
+  let currentTab = "{{ active_tab.as_str() }}";
+
+  function makeContentFixed() {
+    const mainContent = document.getElementById("main-content");
+    mainContent.classList.add("h-[calc(100vh-90px)]");
+  }
+
+  function updateTabUrl() {
+    const tab =
+      new URLSearchParams(window.location.search).get("tab") || "services";
+    const container = document.getElementById("tab-contents");
+    const baseUrl = container.getAttribute("data-base-url");
+    container.setAttribute("hx-get", baseUrl + tab);
+    htmx.process(container);
+  }
+
+  document.addEventListener("DOMContentLoaded", () => {
+    makeContentFixed();
+    const params = new URLSearchParams(window.location.search);
+    if (!params.has("tab")) {
+      updateUrl();
+    } else {
+      currentTab = params.get("tab") || currentTab;
+      loadTabContent();
+    }
+    updateTabVisuals();
+  });
+
+  function handleTabClick(newTab) {
+    currentTab = newTab;
+    updateUrl();
+    loadTabContent();
+    updateTabVisuals();
+  }
+
+  function loadTabContent() {
+    updateTabUrl();
+    const tabContents = document.getElementById("tab-contents");
+    htmx.trigger(tabContents, "trigger-content");
+  }
+
+  function updateUrl() {
+    const newUrl = new URL(window.location);
+    newUrl.searchParams.set("tab", currentTab);
+    window.history.replaceState({}, "", newUrl);
+  }
+
+  function updateTabVisuals() {
+    updateTabUrl();
+
+    document.querySelectorAll("[data-tab]").forEach((tab) => {
+      const isActive = tab.dataset.tab === currentTab;
+      tab.classList.toggle("tab-active", isActive);
+      tab.setAttribute("aria-selected", isActive);
+    });
+  }
+
+  window.addEventListener("popstate", () => {
+    const params = new URLSearchParams(window.location.search);
+    currentTab = params.get("tab") || "services";
+    loadTabContent();
+    updateTabVisuals();
+  });
+</script>

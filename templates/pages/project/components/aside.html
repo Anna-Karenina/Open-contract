@@ -1,0 +1,16 @@
+<aside id="right-sidebar" class="w-64 p-4 hidden lg:block">
+  <div
+    class="card shadow-lg border border-1 border-neutral-600 overflow-hidden rounded-lg"
+  >
+    <div class="card-body p-0">
+      <div class="bg-base-200">
+        <h5 class="p-1 card-title">Collaborators</h5>
+      </div>
+      <div class="px-2">
+        {% for item in collaborators %}
+        <p>{{ item.name }}</p>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+</aside>

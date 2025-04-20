@@ -1,0 +1,499 @@
+<script>
+  function showModal(e, tag) {
+    const modal = document.getElementById("create_modal");
+    modal.showModal(tag);
+  }
+</script>
+
+<ul class="grid grid-cols-1 gap-5">
+  {% for (tag, services) in services_by_tags %}
+  <div class="grid grid-cols-1 gap-3">
+    <div class="flex justify-between px-2">
+      <div class="text-xl font-semibold" id="tag-{{tag}}">{{ tag }}</div>
+    </div>
+    {% for service in services %} {{ service | safe }} {% endfor %}
+  </div>
+  {% endfor %}
+
+  <ul class="menu w-full p-0 mb-3" id="tags-list" hx-swap-oob="true">
+    <div class="menu-title">Service navigation</div>
+    {% for (tag, services) in services_by_tags %}
+    <li>
+      <button
+        class="cursor-pointer"
+        onclick="document.getElementById('tag-{{ tag }}').scrollIntoView({behavior: 'smooth'})"
+      >
+        {{tag}}
+        <div class="flex justify-end">
+          <span class="badge justify-self-end">{{services.len()}}</span>
+          <span
+            class="badge badge-info justify-self-end ml-1 cursor-pointer"
+            @click.stop="(e) => showModal(e, {tag: '{{tag}}'})"
+            >+</span
+          >
+        </div>
+      </button>
+    </li>
+    {% endfor %}
+  </ul>
+</ul>
+
+<dialog id="create_modal" class="modal" x-data="formHandler()">
+  <div class="modal-box w-11/12 max-w-5xl absolute min-h-90vh max-h-90vh">
+    <form method="dialog">
+      <button
+        @click="clearForm()"
+        class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2"
+      >
+        ✕
+      </button>
+    </form>
+    <h3 class="text-lg font-bold">Creating an new service!</h3>
+    <div
+      class="hidden"
+      id="tags-data"
+      data-tags='[{% for (tag, _) in services_by_tags %}"{{ tag }}"{% if !loop.last %},{% endif %}{% endfor %}]'
+    ></div>
+
+    <form @submit.prevent="submitForm">
+      <fieldset
+        class="fieldset w-3xl m-auto bg-base-200 border border-base-300 p-4 rounded-box h-full overflow-y-auto"
+        style="height: calc(90vh - 150px)"
+      >
+        <legend class="fieldset-legend">New service</legend>
+
+        <div class="flex">
+          <div class="w-full">
+            <label class="fieldset-label">Tag</label>
+            <select class="select w-full" x-model="selected_tag">
+              <option selected>Create new tag</option>
+              {% for (tag, _) in services_by_tags %}
+              <option>{{tag}}</option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div x-show="shouldShowTagInput()" class="ml-4 w-full">
+            <label class="fieldset-label">Input new tag name</label>
+            <input
+              type="text"
+              class="input w-full"
+              x-model="selected_tag"
+              placeholder="Tag name"
+            />
+          </div>
+        </div>
+
+        <div class="grid grid-cols-4 gap-4">
+          <div>
+            <label class="fieldset-label">Method</label>
+            <select class="select w-full" x-model="method">
+              <option>GET</option>
+              <option>POST</option>
+              <option>PUT</option>
+              <option>DELETE</option>
+              <option>PATCH</option>
+            </select>
+          </div>
+
+          <div class="col-span-3">
+            <label class="fieldset-label">Path</label>
+            <input
+              x-model="path"
+              type="text"
+              class="input w-full"
+              placeholder="api/project/{id}/user-crate"
+            />
+          </div>
+        </div>
+
+        <div>
+          <label class="fieldset-label">Path params</label>
+          <input
+            x-model="path_params"
+            type="text"
+            class="input w-full"
+            placeholder="`status=active`"
+          />
+        </div>
+
+        <div>
+          <label class="fieldset-label">Short description</label>
+          <textarea
+            rows="3"
+            x-model="description"
+            type="text"
+            class="textarea w-full"
+            placeholder="short description about handler"
+          >
+          </textarea>
+        </div>
+
+        <div>
+          <label class="fieldset-label justify-between">
+            <span>Body</span>
+            <span
+              class="badge badge-info justify-self-end ml-1 cursor-pointer"
+              @click="addField('body')"
+              >+</span
+            >
+          </label>
+        </div>
+
+        <template x-for="(field, index) in body" :key="field.index">
+          <div class="last:mb-1">
+            <div class="join items-center w-full">
+              <input
+                x-model="field.key"
+                type="text"
+                class="input join-item w-full"
+                placeholder="key"
+              />
+
+              <select
+                x-model="field.type"
+                class="select join-item w-40"
+                @change="field.type === 'object' ? initMapField(field) : ''"
+              >
+                <option value="string">string</option>
+                <option value="int">int</option>
+                <option value="bool">bool</option>
+                <option value="double">double</option>
+                <option value="object">object</option>
+              </select>
+
+              <button class="join-item btn btn-neutral">
+                <input
+                  type="checkbox"
+                  x-model="field.is_repeated"
+                  checked="checked"
+                  class="checkbox"
+                />
+                <span class="text-neutral-300/100">[ ]</span>
+              </button>
+              <button class="join-item btn btn-neutral">
+                <input
+                  type="checkbox"
+                  class="checkbox"
+                  x-model="field.is_required"
+                />
+                <span class="text-red-600/75">*</span>
+              </button>
+
+              <button
+                class="join-item btn btn-error"
+                type="button"
+                @click="removeField(index, 'body')"
+              >
+                <span class="text-neutral">×</span>
+              </button>
+            </div>
+
+            <template x-if="field.type === 'object' && field.inner_fields">
+              <div class="ml-3 pl-3 border-l-1 border-gray-200">
+                <span
+                  class="flex badge badge-info justify-self-end my-1 cursor-pointer"
+                  @click="addNestedField(field)"
+                  >+</span
+                >
+
+                <template
+                  x-for="(nestedField, nestedIndex) in field.inner_fields"
+                  :key="nestedField.index"
+                >
+                  <div class="mb-1 last:pb-5 last:mb-0">
+                    <div class="join items-center w-full">
+                      <input
+                        x-model="nestedField.key"
+                        type="text"
+                        class="input join-item w-full"
+                        placeholder="nested key"
+                      />
+                      <select
+                        x-model="nestedField.type"
+                        class="select join-item w-40"
+                        @change="nestedField.type === 'object' ? initMapField(nestedField) : ''"
+                      >
+                        <option value="string">string</option>
+                        <option value="int">int</option>
+                        <option value="bool">bool</option>
+                        <option value="double">double</option>
+                        <option value="object">object</option>
+                      </select>
+                      <button class="join-item btn btn-neutral">
+                        <input
+                          type="checkbox"
+                          x-model="nestedField.is_repeated"
+                          checked="checked"
+                          class="checkbox"
+                        />
+                        <span class="text-neutral-300/100">[ ]</span>
+                      </button>
+                      <button class="join-item btn btn-neutral">
+                        <input
+                          type="checkbox"
+                          class="checkbox"
+                          x-model="nestedField.is_required"
+                        />
+                        <span class="text-red-600/75">*</span>
+                      </button>
+
+                      <button
+                        class="join-item btn btn-error"
+                        @click="field.inner_fields.splice(nestedIndex, 1)"
+                      >
+                        <span class="text-neutral"> × </span>
+                      </button>
+                    </div>
+
+                    <template
+                      x-if="nestedField.type === 'object' && nestedField.inner_fields"
+                    >
+                      <div class="ml-2 pl-3 border-l-1 border-gray-200/75">
+                        <span
+                          class="flex badge badge-info justify-self-end my-1 cursor-pointer"
+                          @click="addNestedField(nestedField)"
+                          >+</span
+                        >
+                        <template
+                          x-for="(deepField, deepIndex) in nestedField.inner_fields"
+                          :key="deepField.index"
+                        >
+                          <div class="join items-center w-full mb-1 last:mb-7">
+                            <input
+                              x-model="deepField.key"
+                              type="text"
+                              class="input join-item w-full"
+                              placeholder="deep key"
+                            />
+                            <select
+                              x-model="deepField.type"
+                              class="select join-item w-40"
+                              @change="deepField.type === 'object' ? initMapField(deepField) : ''"
+                            >
+                              <option value="string">string</option>
+                              <option value="int">int</option>
+                              <option value="bool">bool</option>
+                              <option value="double">double</option>
+                            </select>
+                            <button class="join-item btn btn-neutral">
+                              <input
+                                type="checkbox"
+                                x-model="deepField.is_repeated"
+                                checked="checked"
+                                class="checkbox"
+                              />
+                              <span class="text-neutral-300/100">[ ]</span>
+                            </button>
+                            <button class="join-item btn btn-neutral">
+                              <input
+                                type="checkbox"
+                                class="checkbox"
+                                x-model="deepField.is_required"
+                              />
+                              <span class="text-red-600/100">*</span>
+                            </button>
+                            <button
+                              class="join-item btn btn-error"
+                              @click="nestedField.inner_fields.splice(deepIndex, 1)"
+                            >
+                              <span class="text-neutral"> × </span>
+                            </button>
+                          </div>
+                        </template>
+                      </div>
+                    </template>
+                  </div>
+                </template>
+              </div>
+            </template>
+          </div>
+        </template>
+
+        <div>
+          <label class="fieldset-label justify-between">
+            <span>Response</span>
+            <span
+              class="badge badge-info justify-self-end ml-1 cursor-pointer"
+              @click="addField('response')"
+              >+</span
+            >
+          </label>
+        </div>
+
+        <template x-for="(field, index) in response" :key="field.index">
+          <div class="last:mb-1">
+            <div class="join items-center w-full">
+              <input
+                x-model="field.key"
+                type="text"
+                class="input join-item w-full"
+                placeholder="key"
+              />
+
+              <select
+                x-model="field.type"
+                class="select join-item w-40"
+                @change="field.type === 'object' ? initMapField(field) : ''"
+              >
+                <option value="string">string</option>
+                <option value="int">int</option>
+                <option value="bool">bool</option>
+                <option value="double">double</option>
+                <option value="object">object</option>
+              </select>
+
+              <button class="join-item btn btn-neutral">
+                <input
+                  type="checkbox"
+                  x-model="field.is_repeated"
+                  checked="checked"
+                  class="checkbox"
+                />
+                <span class="text-neutral-300/100">[ ]</span>
+              </button>
+              <button class="join-item btn btn-neutral">
+                <input
+                  type="checkbox"
+                  class="checkbox"
+                  x-model="field.is_required"
+                />
+                <span class="text-red-600/75">*</span>
+              </button>
+
+              <button
+                class="join-item btn btn-error"
+                type="button"
+                @click="removeField(index, response)"
+              >
+                <span class="text-neutral">×</span>
+              </button>
+            </div>
+
+            <template x-if="field.type === 'object' && field.inner_fields">
+              <div class="ml-3 pl-3 border-l-1 border-gray-200">
+                <span
+                  class="flex badge badge-info justify-self-end my-1 cursor-pointer"
+                  @click="addNestedField(field)"
+                  >+</span
+                >
+
+                <template
+                  x-for="(nestedField, nestedIndex) in field.inner_fields"
+                  :key="nestedField.index"
+                >
+                  <div class="mb-1 last:pb-5 last:mb-0">
+                    <div class="join items-center w-full">
+                      <input
+                        x-model="nestedField.key"
+                        type="text"
+                        class="input join-item w-full"
+                        placeholder="nested key"
+                      />
+                      <select
+                        x-model="nestedField.type"
+                        class="select join-item w-40"
+                        @change="nestedField.type === 'object' ? initMapField(nestedField) : ''"
+                      >
+                        <option value="string">string</option>
+                        <option value="int">int</option>
+                        <option value="bool">bool</option>
+                        <option value="double">double</option>
+                        <option value="object">object</option>
+                      </select>
+                      <button class="join-item btn btn-neutral">
+                        <input
+                          type="checkbox"
+                          x-model="nestedField.is_repeated"
+                          checked="checked"
+                          class="checkbox"
+                        />
+                        <span class="text-neutral-300/100">[ ]</span>
+                      </button>
+                      <button class="join-item btn btn-neutral">
+                        <input
+                          type="checkbox"
+                          class="checkbox"
+                          x-model="nestedField.is_required"
+                        />
+                        <span class="text-red-600/75">*</span>
+                      </button>
+
+                      <button
+                        class="join-item btn btn-error"
+                        @click="field.inner_fields.splice(nestedIndex, 1)"
+                      >
+                        <span class="text-neutral"> × </span>
+                      </button>
+                    </div>
+
+                    <template
+                      x-if="nestedField.type === 'object' && nestedField.inner_fields"
+                    >
+                      <div class="ml-2 pl-3 border-l-1 border-gray-200/75">
+                        <span
+                          class="flex badge badge-info justify-self-end my-1 cursor-pointer"
+                          @click="addNestedField(nestedField)"
+                          >+</span
+                        >
+                        <template
+                          x-for="(deepField, deepIndex) in nestedField.inner_fields"
+                          :key="deepField.index"
+                        >
+                          <div class="join items-center w-full mb-1 last:mb-7">
+                            <input
+                              x-model="deepField.key"
+                              type="text"
+                              class="input join-item w-full"
+                              placeholder="deep key"
+                            />
+                            <select
+                              x-model="deepField.type"
+                              class="select join-item w-40"
+                              @change="deepField.type === 'object' ? initMapField(deepField) : ''"
+                            >
+                              <option value="string">string</option>
+                              <option value="int">int</option>
+                              <option value="bool">bool</option>
+                              <option value="double">double</option>
+                            </select>
+                            <button class="join-item btn btn-neutral">
+                              <input
+                                type="checkbox"
+                                x-model="deepField.is_repeated"
+                                checked="checked"
+                                class="checkbox"
+                              />
+                              <span class="text-neutral-300/100">[ ]</span>
+                            </button>
+                            <button class="join-item btn btn-neutral">
+                              <input
+                                type="checkbox"
+                                class="checkbox"
+                                x-model="deepField.is_required"
+                              />
+                              <span class="text-red-600/100">*</span>
+                            </button>
+                            <button
+                              class="join-item btn btn-error"
+                              @click="nestedField.inner_fields.splice(deepIndex, 1)"
+                            >
+                              <span class="text-neutral"> × </span>
+                            </button>
+                          </div>
+                        </template>
+                      </div>
+                    </template>
+                  </div>
+                </template>
+              </div>
+            </template>
+          </div>
+        </template>
+      </fieldset>
+      <div class="w-3xl flex-row-reverse m-auto">
+        <button type="submit" class="btn btn-info mt-4">Create</button>
+      </div>
+    </form>
+  </div>
+</dialog>

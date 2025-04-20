@@ -1,0 +1,7 @@
+/target
+.env
+
+__templates
+
+/templates/_contract
+/templates/_project

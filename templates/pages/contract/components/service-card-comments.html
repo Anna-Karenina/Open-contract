@@ -1,0 +1,11 @@
+{% for message in messages %}
+<div
+  class="chat {% if message.author_self %}chat-end{% else %}chat-start{% endif %}"
+>
+  <div class="chat-header">
+    {{message.author_name}}
+    <time class="text-xs opacity-50">{{message.published_at}}</time>
+  </div>
+  <div class="chat-bubble chat-bubble-neutral">{{message.text}}</div>
+</div>
+{% endfor %}
