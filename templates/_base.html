@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="drakula">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Open Contract</title>
+    <link href="https://cdn.jsdelivr.net/npm/daisyui@3.9.4/dist/full.css" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/htmx.org@1.9.6"></script>
+    <script src="/static/js/app.js" defer></script>
+</head>
+<body>
+    <!-- Шапка -->
+    <header class="navbar bg-base-100 shadow-sm">
+        <div class="flex-1">
+            <a href="/" class="btn btn-ghost normal-case text-xl">OpenContract</a>
+        </div>
+        <nav class="flex-none">
+            <ul class="menu menu-horizontal px-1">
+                <li><a href="/project/content" data-nav-link>Projects</a></li>
+                <li><a href="/user/content" data-nav-link>Profile</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <!-- Основной контент -->
+    <div class="flex flex-1">
+        <!-- Drawer -->
+        <aside id="drawer" class="w-64 bg-base-200 p-4"
+                hx-get="{{current_path}}/components/drawer"
+               hx-trigger="load, nav-changed from:body">
+            <div class="htmx-indicator loading">Loading drawer...</div>
+        </aside>
+
+        <!-- Контент -->
+        <main id="content" class="flex-1 p-4"
+              hx-get="{{current_path}}/components/content"
+              hx-trigger="load, nav-changed from:body">
+            <div class="htmx-indicator loading">Loading content...</div>
+        </main>
+
+        <!-- Aside -->
+        <aside id="aside" class="w-64 bg-base-200 p-4"
+               hx-get="{{current_path}}/components/aside"
+               hx-trigger="load, nav-changed from:body">
+            <div class="htmx-indicator loading">Loading sidebar...</div>
+        </aside>
+    </div>
+</body>
+</html>

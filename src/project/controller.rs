@@ -4,11 +4,13 @@ use crate::{
         model::{CrateContract, ServiceRequest},
         repository::{ContractRepository, VersionControl},
     },
+    proto_parser,
     storage::db::DbPool,
-    swagger_parser, utils,
+    utils,
 };
 use actix_web::{HttpResponse, Responder, web};
 use diesel::result::Error;
+use dot_proto_parser::ProtoParser;
 
 use super::{
     model::{NewProject, UpdateProject},
@@ -113,9 +115,11 @@ pub async fn crate_contract(
     service: web::Json<ServiceRequest>,
     project_id: web::Path<i32>,
     a_user: AuthenticatedUser,
+    vc: web::Data<VersionControl>,
 ) -> impl Responder {
     let service = service.into_inner();
     let project_id = project_id.into_inner();
+    let user_id = a_user.0.id;
 
     let body = match serde_json::to_string(&service.body) {
         Ok(it) => Some(it),
@@ -128,27 +132,76 @@ pub async fn crate_contract(
     };
 
     let (parsed_path, parsed_query_params) =
-        swagger_parser::parse_utils::parse_path_template(&service.path);
+        proto_parser::utils::parse_path_template(&service.path);
+
     let grpc_method = format!(
         "{}{}",
         utils::strings_utils::capitalize(&service.method),
         parsed_path
     );
-    let parsed_query_params = parsed_query_params.join(": string,\n");
+
+    let q = format!(
+        "{{\n{},\n{}\n}}",
+        service.path_params,
+        parsed_query_params.join(": string,\n")
+    );
+
     let payload: CrateContract = CrateContract {
         project_id,
         author_id: a_user.0.id,
         grpc_method,
-        tag: Some(service.tag),
+        tag: Some(service.tag.clone()),
         errors_response: Some("errors".to_string()),
-        path: Some(service.path),
-        query: Some("{\n" + &service.path_params + &parsed_query_params + "§}"),
+        path: Some(service.path.clone()),
+        query: Some(q),
         body,
         response: parsed_response,
-        http_method: Some(service.method),
-        description: Some(service.description),
+        http_method: Some(service.method.clone()),
+        description: Some(service.description.clone()),
     };
-    dbg!(&payload);
+
+    let cloned_pool = pool.clone();
+
+    let project = web::block(move || {
+        let mut conn = match cloned_pool.get() {
+            Ok(conn) => conn,
+            Err(_) => return None,
+        };
+        match ProjectRepository::find_by_id(&mut conn, project_id) {
+            Ok(project) => project,
+            Err(_) => return None,
+        }
+    })
+    .await;
+
+    let proto_file_name = match project {
+        Ok(option_p) => match option_p {
+            Some(option_p) => format!("{}.proto", option_p.name),
+            None => return HttpResponse::NotFound().finish(),
+        },
+        Err(_) => return HttpResponse::NotFound().finish(),
+    };
+
+    let current_proto_file = vc.read_file_content(&proto_file_name).await.unwrap();
+
+    let mut parser = ProtoParser::new();
+    let parsed = match parser.parse(&current_proto_file) {
+        Ok(proto_file) => proto_file,
+        Err(_) => return HttpResponse::InternalServerError().finish(),
+    };
+
+    let proto_content = match service.add_to_proto_context(parsed) {
+        Err(_) => return HttpResponse::InternalServerError().finish(),
+        Ok(p) => p,
+    };
+
+    vc.save_version(
+        &proto_file_name,
+        &proto_content.to_proto_text(),
+        &user_id.to_string(),
+    )
+    .await
+    .expect("save error message");
 
     let result = web::block(move || {
         let mut conn = pool.get().map_err(|_| diesel::result::Error::NotFound)?;
@@ -156,19 +209,9 @@ pub async fn crate_contract(
     })
     .await;
 
-    // let json_string = serde_json::to_string(&project).unwrap();
-    // let mut file = File::create("data.json").expect("Could not create file!");
-    // file.write_all(json_string.as_bytes())
-    //     .expect("Cannot write to the file!");
-
-    dbg!(&result);
     match result {
         Ok(Ok(_)) => HttpResponse::NoContent().finish(),
-        Ok(Err(Error::NotFound)) => HttpResponse::NotFound().finish(),
         Ok(Err(_)) => HttpResponse::InternalServerError().finish(),
-        Err(e) => {
-            dbg!(&e);
-            HttpResponse::InternalServerError().finish()
-        }
+        Err(_) => HttpResponse::InternalServerError().finish(),
     }
 }

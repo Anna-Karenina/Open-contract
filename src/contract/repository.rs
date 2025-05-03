@@ -156,10 +156,9 @@ impl ContractRepository {
         conn: &mut PgConnection,
         contract: CrateContract,
     ) -> Result<Contract, diesel::result::Error> {
-        Err(diesel::result::Error::NotFound)
-        // diesel::insert_into(contracts::table)
-        //     .values(contract)
-        //     .get_result(conn)
+        diesel::insert_into(contracts::table)
+            .values(contract)
+            .get_result(conn)
     }
 }
 

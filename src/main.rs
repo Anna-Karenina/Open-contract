@@ -2,9 +2,9 @@ pub mod auth;
 pub mod contract;
 pub mod file_storage;
 pub mod project;
+pub mod proto_parser;
 pub mod schema;
 pub mod storage;
-pub mod swagger_parser;
 pub mod user;
 pub mod utils;
 
